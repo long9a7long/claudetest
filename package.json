@@ -1,0 +1,14 @@
+{
+  "name": "testclaudeqa",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A small cart calculator served by a minimal Express static server.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "express": "^4.21.2"
+  }
+}
