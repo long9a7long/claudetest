@@ -1,0 +1,53 @@
+{
+  "skills": [
+    {
+      "name": "Grouped result amounts in UI with DOM tests",
+      "tool": "public/app.js DOM rendering with the existing calc.js formatter, tested with node:test and jsdom",
+      "priority": "P2",
+      "skill_id": "SKILL_001",
+      "testcases": [],
+      "capability": "Renders Subtotal, Discount, Total, and the savings and threshold-hint amounts with thousands separators via the existing calc.js formatter's grouping option, leaves Price and Quantity input values untouched, and locks the behavior in with jsdom tests.",
+      "dependencies": [],
+      "prompt_template": "You are updating the results rendering in public/app.js so that every displayed money amount (Subtotal, Discount, Total, the 'You saved X.XX' line and the 'Add X.XX more' hint if present) is formatted via the existing calc.js cents formatter with its thousands-grouping option enabled. Do NOT write a second formatter and do NOT recompute subtotal, discount or total; consume the values already returned by calc.js. If the existing formatter lacks a grouping option, add it to that same function using integer/string operations only (no toLocaleString, no floating-point math) and keep the default ungrouped output unchanged. Keep using textContent, and never modify the Price or Quantity input values on input, change or after calculating. No layout changes beyond making sure long grouped numbers wrap or fit without horizontal scrolling at 320px width. Add a jsdom test file (e.g. test/grouping-ui.test.js) using node:test that loads the real public/index.html, calc.js and app.js, following the pattern of the existing UI tests; it must be picked up by the existing npm test script.",
+      "acceptance_criteria": [
+        "Submitting price '1000000' and quantity '10000' renders Subtotal '10,000,000,000.00', Discount '1,000,000,000.00' and Total '9,000,000,000.00'",
+        "Submitting price '1234.50' and quantity '1' renders Subtotal '1,234.50' and Total '1,234.50'",
+        "Submitting price '19.99' and quantity '5' renders '99.95' with no separator, and exactly 100.00 renders Subtotal '100.00', Discount '10.00', Total '90.00'",
+        "When a discount applies on a large subtotal, the 'You saved' line shows a grouped amount (e.g. '1,000.00'), and a small amount such as '10.00' has no separator",
+        "The threshold hint for 99.99 reads 'Add 0.01 more to get 10% off' with no separator",
+        "Price and Quantity input values are identical before and after Calculate (e.g. '1000000' stays '1000000'), and dispatching input events while typing '1234567' leaves the field value '1234567'",
+        "After an invalid submission the results stay hidden, no amounts are shown, and field errors appear as before",
+        "With 1000000 × 10000 calculated at 320px viewport width, the page has no horizontal scrollbar (document.scrollWidth <= window.innerWidth)",
+        "The new test file passes under npm test and all existing tests still pass"
+      ]
+    },
+    {
+      "name": "Dark mode palette with contrast test",
+      "tool": "public/styles.css (CSS custom properties, prefers-color-scheme media query) and node:test with CSS token parsing and WCAG contrast calculation",
+      "priority": "P2",
+      "skill_id": "SKILL_002",
+      "testcases": [],
+      "capability": "Adds an automatic prefers-color-scheme: dark palette by overriding the existing CSS custom properties, and verifies with an automated test that every dark text/background pair meets WCAG AA contrast.",
+      "dependencies": [],
+      "prompt_template": "You are adding dark mode to public/styles.css using only a @media (prefers-color-scheme: dark) block that overrides the existing design-token custom properties on :root; no JavaScript, no toggle button and no stored preference. Replace any remaining hard-coded colors in the card, inputs, buttons (primary Calculate, outlined Clear), error text, discount/savings/hint text, borders and focus ring with variables so every component follows the palette. Use a dark page background with a slightly lighter flat card, light text, and muted and accent colors that keep contrast at or above 4.5:1 for text and 3:1 for borders and the focus ring. Keep the existing spacing, typography and flat card style, add `color-scheme: light dark`, keep page weight within the 50 KB budget and add no external resources. Then write a node:test test (e.g. test/dark-contrast.test.js) that parses the dark custom properties from public/styles.css, computes WCAG 2.1 relative-luminance contrast ratios for body text on page and card, muted text, error text, discount/savings text and the button label on the button background, and for the input border and focus ring against their adjacent background. If a token fails, fix it in styles.css rather than loosening the thresholds. Do not re-run the Lighthouse audit here; the existing Lighthouse verification story covers it.",
+      "acceptance_criteria": [
+        "public/styles.css contains an @media (prefers-color-scheme: dark) block that redefines the color custom properties on :root, and declares color-scheme: light dark",
+        "No component rule outside the :root and dark blocks uses a hard-coded hex/rgb color for text, background or border (all use var(--...))",
+        "Emulating prefers-color-scheme: dark in the browser gives a dark page background and card with light body text, while the light scheme appearance is unchanged",
+        "In dark mode the form, inputs, Calculate button, Clear button, error messages and results are all legible, with no light-on-light or dark-on-dark elements",
+        "A test under test/ runs under npm test and fails if any dark text/background pair (body, muted, error, discount/savings, button label) has contrast below 4.5:1",
+        "The same test asserts the focus ring and input border have at least 3:1 contrast against their adjacent background, and the focus ring is visible on inputs and buttons in dark mode",
+        "public/ total page weight is at most 50 KB and styles.css contains no url() to external hosts"
+      ]
+    }
+  ],
+  "metadata": {
+    "epic_key": "CQA-7",
+    "prd_title": "PRD - TestClaudeQA",
+    "generated": "2026-11-17T04:56:41.740941Z",
+    "total": 2,
+    "p0_count": 0,
+    "p1_count": 0,
+    "p2_count": 2
+  }
+}
