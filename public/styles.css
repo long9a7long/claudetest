@@ -2,7 +2,7 @@
   --color-bg: #f6f7f9;
   --color-surface: #ffffff;
   --color-text: #1a1a1a;
-  --color-text-secondary: #5b6270;
+  --color-text-secondary: #5b6470;
   --color-accent: #1f5eff;
   --color-accent-hover: #1749cc;
   --color-accent-contrast: #ffffff;
@@ -295,7 +295,10 @@ input:focus-visible {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  * {
-    transition: none;
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
+    animation: none !important;
   }
 }
