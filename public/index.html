@@ -10,7 +10,32 @@
   <main>
     <h1>Cart Calculator</h1>
     <section id="card" class="card">
-      <p class="card-placeholder">Calculator form coming soon.</p>
+      <form id="calc-form" novalidate>
+        <div class="field">
+          <label for="price">Price</label>
+          <input id="price" name="price" type="text" inputmode="decimal" autocomplete="off">
+          <p id="price-error" class="field-error" aria-live="off"></p>
+        </div>
+        <div class="field">
+          <label for="quantity">Quantity</label>
+          <input id="quantity" name="quantity" type="text" inputmode="numeric" autocomplete="off">
+          <p id="quantity-error" class="field-error" aria-live="off"></p>
+        </div>
+        <div class="actions">
+          <button type="submit" class="btn btn-primary">Calculate</button>
+        </div>
+      </form>
+      <section id="results" class="results" aria-live="polite" hidden>
+        <dl class="results-list">
+          <dt>Subtotal</dt>
+          <dd id="result-subtotal">0.00</dd>
+          <dt>Discount</dt>
+          <dd id="result-discount">0.00</dd>
+          <dt>Total</dt>
+          <dd id="result-total">0.00</dd>
+        </dl>
+        <p id="discount-note"></p>
+      </section>
     </section>
   </main>
   <script src="calc.js"></script>
