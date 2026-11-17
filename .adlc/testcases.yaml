@@ -19,3 +19,11 @@ cases:
     export: "DISCOUNT_RATE"
     args: []
     expect: { equals: 0.1 }  # AI-proposed, human-approved — covers a previously-untested acceptance criterion
+  - name: "covers: parsePriceToCents('19.99') yields 1999, ' 5 ' yields 500, '0.5' yields 50, '0' yields 0 and '1000000.00' yields "
+    kind: "testcase"
+    skill_id: "SKILL_001"
+    epic_key: "CQA-3"
+    module: "public/calc.js"
+    export: "parsePriceToCents"
+    args: ["19.99"]
+    expect: { contains: {"value": 1999} }  # AI-proposed, human-approved — covers a previously-untested acceptance criterion
