@@ -3,3 +3,11 @@
 # Each case is tagged with the skill_id/epic_key it belongs to.
 version: 1
 cases:
+  - name: "covers: The module exports the Express app and a start function; start(0) listens on an ephemeral port, returns an http."
+    kind: "testcase"
+    skill_id: "SKILL_001"
+    epic_key: "CQA-2"
+    module: "server.js"
+    export: "start"
+    args: [0]
+    expect: { type: "object" }  # AI-proposed, human-approved — covers a previously-untested acceptance criterion
