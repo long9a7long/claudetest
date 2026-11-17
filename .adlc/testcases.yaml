@@ -10,4 +10,4 @@ cases:
     module: "server.js"
     export: "start"
     args: [0]
-    expect: { type: "object" }  # AI-proposed, human-approved — covers a previously-untested acceptance criterion
+    expect: { type: "object" }  # auto-corrected by spec_autofix (proactive_spec_generated)
