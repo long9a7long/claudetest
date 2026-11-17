@@ -43,3 +43,11 @@ cases:
     export: "validateInputs"
     args: ["", ""]
     expect: { contains: {"valid": false, "errors": {"price": "Enter a price.", "quantity": "Enter a quantity."}} }  # AI-proposed, human-approved — covers a previously-untested acceptance criterion
+  - name: "covers: validateInputs returns 'Price must be a number.' for 'abc', '1e3', '12,5', 'Infinity' and 'NaN' as price, and 'Q"
+    kind: "testcase"
+    skill_id: "SKILL_001"
+    epic_key: "CQA-3"
+    module: "public/calc.js"
+    export: "validateInputs"
+    args: ["abc", "5"]
+    expect: { contains: {"valid": false, "errors": {"price": "Price must be a number."}} }  # AI-proposed, human-approved — covers a previously-untested acceptance criterion
