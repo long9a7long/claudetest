@@ -32,7 +32,7 @@ function init() {
 
   function setFieldError(name, message) {
     const field = fields[name];
-    field.error.textContent = message;
+    field.error.textContent = '⚠ ' + message;
     field.input.setAttribute('aria-invalid', 'true');
     field.input.setAttribute('aria-describedby', field.error.id);
   }

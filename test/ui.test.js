@@ -174,7 +174,7 @@ test('invalid input sets error text, aria-invalid, aria-describedby and hides st
   const priceError = document.getElementById('price-error');
   assert.equal(priceInput.getAttribute('aria-invalid'), 'true');
   assert.equal(priceInput.getAttribute('aria-describedby'), 'price-error');
-  assert.equal(priceError.textContent, 'Price must be a number.');
+  assert.ok(priceError.textContent.includes('Price must be a number.'));
   assert.equal(document.getElementById('results').hidden, true);
   assert.equal(document.getElementById('result-total').textContent, '');
   assert.equal(document.activeElement, priceInput);
@@ -222,4 +222,81 @@ test('styles.css uses design tokens for min-height on inputs and the primary but
 
 test('styles.css keeps [hidden] effective on the results region', () => {
   assert.match(cssSource, /\.results\[hidden\]\s*{\s*display:\s*none;?\s*}/);
+});
+
+test('negative price shows the exact Calc message with aria-invalid and a hidden results panel', () => {
+  const dom = makeDom();
+  const { document } = dom.window;
+
+  fillAndSubmit(dom, '-5', '2');
+
+  const priceInput = document.getElementById('price');
+  const priceError = document.getElementById('price-error');
+  assert.equal(priceInput.getAttribute('aria-invalid'), 'true');
+  assert.equal(priceInput.getAttribute('aria-describedby'), 'price-error');
+  assert.ok(priceError.textContent.includes('Price cannot be negative.'));
+  assert.equal(document.getElementById('results').hidden, true);
+});
+
+test('price abc and quantity x show two independent errors at once', () => {
+  const dom = makeDom();
+  const { document } = dom.window;
+
+  fillAndSubmit(dom, 'abc', 'x');
+
+  const priceInput = document.getElementById('price');
+  const quantityInput = document.getElementById('quantity');
+  const priceError = document.getElementById('price-error');
+  const quantityError = document.getElementById('quantity-error');
+
+  assert.notEqual(priceError.textContent, '');
+  assert.notEqual(quantityError.textContent, '');
+  assert.notEqual(priceError.textContent, quantityError.textContent);
+  assert.equal(priceInput.getAttribute('aria-invalid'), 'true');
+  assert.equal(quantityInput.getAttribute('aria-invalid'), 'true');
+  assert.equal(priceInput.getAttribute('aria-describedby'), 'price-error');
+  assert.equal(quantityInput.getAttribute('aria-describedby'), 'quantity-error');
+  assert.equal(document.getElementById('results').hidden, true);
+});
+
+test('field error text carries a visible non-color prefix in addition to the message', () => {
+  const dom = makeDom();
+  const { document } = dom.window;
+
+  fillAndSubmit(dom, '-5', '2');
+
+  const priceError = document.getElementById('price-error');
+  const message = 'Price cannot be negative.';
+  assert.ok(priceError.textContent.length > message.length, 'expected a prefix before the message');
+  assert.notEqual(priceError.textContent.charAt(0), message.charAt(0));
+});
+
+test('after a successful calculation all error elements are empty and no input is aria-invalid', () => {
+  const dom = makeDom();
+  const { document } = dom.window;
+
+  fillAndSubmit(dom, 'abc', 'x');
+  fillAndSubmit(dom, '50', '2');
+
+  assert.equal(document.getElementById('price-error').textContent, '');
+  assert.equal(document.getElementById('quantity-error').textContent, '');
+  assert.equal(document.getElementById('price').hasAttribute('aria-invalid'), false);
+  assert.equal(document.getElementById('quantity').hasAttribute('aria-invalid'), false);
+});
+
+test('a prior result is fully cleared from the document after a subsequent invalid calculation', () => {
+  const dom = makeDom();
+  const { document } = dom.window;
+
+  fillAndSubmit(dom, '50', '2');
+  assert.equal(document.getElementById('result-total').textContent, '90.00');
+
+  fillAndSubmit(dom, '-5', '2');
+
+  assert.equal(document.getElementById('results').hidden, true);
+  assert.equal(document.getElementById('result-subtotal').textContent, '');
+  assert.equal(document.getElementById('result-discount').textContent, '');
+  assert.equal(document.getElementById('result-total').textContent, '');
+  assert.equal(document.getElementById('discount-note').textContent, '');
+  assert.doesNotMatch(document.body.textContent, /90\.00/);
 });
