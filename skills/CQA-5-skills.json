@@ -1,0 +1,55 @@
+{
+  "skills": [
+    {
+      "name": "Savings Highlight and Threshold Hint",
+      "tool": "Vanilla JS DOM (app.js, index.html, styles.css) + calc.js savings/remaining helpers + node:test + jsdom",
+      "priority": "P1",
+      "skill_id": "SKILL_001",
+      "testcases": [],
+      "capability": "Show a 'You saved X.XX' line when a discount applies, or an 'Add X.XX more to get 10% off' hint when the subtotal is below 100.00, inside the aria-live results region, and cover both with jsdom tests including the 99.99 and 100.00 boundaries.",
+      "dependencies": [],
+      "prompt_template": "You extend the existing calculator results UI. In public/index.html add a savings element and a hint element inside the existing aria-live=\"polite\" results region. In app.js, after a successful calculation, set the savings text via textContent to 'You saved ' + the formatted value from the calc.js savings helper when the discount is greater than 0. Otherwise set the hint text via textContent to 'Add ' + the formatted remaining amount from the calc.js remaining-cents helper + ' more to get 10% off'. Never recompute the discount, threshold or remaining cents in app.js; consume the existing calculation result and calc.js helpers. Only one of the two lines is visible at a time. Hide or empty both on validation failure and whenever results are cleared. Style both lines in styles.css using the card's existing spacing scale and font family: the savings line in an AA-contrast accent color (e.g. green on the light card), the hint as a slightly muted but AA-contrast secondary note. Both must wrap cleanly with no horizontal scroll at 320px. Add test/ux-enhancements.test.js with node:test and jsdom, loading the real public/index.html, calc.js and app.js by reusing the existing jsdom UI test harness. Test savings and hint text, absence cases, the 99.99 and 100.00 boundaries, placement inside the aria-live region, and textContent usage.",
+      "acceptance_criteria": [
+        "After price 100 and quantity 1 is submitted, the results region contains 'You saved 10.00' and no threshold hint is present or visible",
+        "After price 100.01 and quantity 1 is submitted, the savings line reads 'You saved 10.00' and no threshold hint is present or visible",
+        "After price 99.99 and quantity 1 is submitted, the hint reads 'Add 0.01 more to get 10% off' and no 'You saved' text exists in the results region",
+        "After price 19.99 and quantity 1 is submitted, the hint reads 'Add 80.01 more to get 10% off'",
+        "After a successful calculation followed by an invalid submission, both the savings line and the hint are absent or hidden",
+        "Both texts are set via textContent (no innerHTML for them in app.js) and both elements are descendants of the element with aria-live=\"polite\"",
+        "Opening the app, entering 50 and 2 and pressing Calculate shows 'You saved 10.00' on screen; entering 40 and 2 shows 'Add 20.00 more to get 10% off' on screen",
+        "test/ux-enhancements.test.js covers the criteria above and passes under the existing npm test with zero failures"
+      ]
+    },
+    {
+      "name": "Clear Button and Error Focus",
+      "tool": "Vanilla JS DOM (app.js, index.html, styles.css) + node:test + jsdom",
+      "priority": "P1",
+      "skill_id": "SKILL_002",
+      "testcases": [],
+      "capability": "Add a secondary outlined Clear button that resets inputs, errors and results and focuses Price, and move focus to the first aria-invalid field after a failed calculation, with jsdom tests for both.",
+      "dependencies": [
+        "SKILL_001"
+      ],
+      "prompt_template": "Add a type=\"button\" Clear button next to Calculate in public/index.html. In app.js wire a click handler that empties both inputs, removes all error messages plus aria-invalid/aria-describedby state, clears the results panel (including the savings line and threshold hint), and calls focus() on the Price input. Reuse the existing reset/render helpers in app.js rather than duplicating state-clearing logic. Also in app.js, after the existing error-rendering step runs on a failed validation, query the form for the first input with aria-invalid=\"true\" (DOM order: Price before Quantity) and call focus() on it. Do not move focus on successful calculations, and do not change validation messages or recompute validation in app.js. In styles.css style Clear as a secondary outlined button: transparent background, 1-2px border and text in the primary color, same border radius, font and padding as Calculate, minimum 44x44px touch target, visible focus ring without layout shift, sitting beside Calculate on wide screens and stacking full-width at 320px. Extend test/ux-enhancements.test.js (node:test + jsdom, using the existing harness) with tests for Clear and error focus.",
+      "acceptance_criteria": [
+        "The page contains a button with visible text 'Clear' and type=\"button\" that does not submit the form",
+        "After a successful calculation, clicking Clear leaves both inputs with value '' and the results region empty or hidden, with no savings line or threshold hint present",
+        "After a failed calculation showing errors, clicking Clear removes all error text and removes aria-invalid from both inputs",
+        "After clicking Clear, document.activeElement is the Price input",
+        "Submitting with empty Price and valid Quantity makes document.activeElement the Price input; with valid Price and empty Quantity it is the Quantity input; with both invalid it is the Price input",
+        "A successful calculation does not move focus away from the element that was focused at submit time",
+        "The Clear button has a border set, a transparent background and a min width and height of 44px, distinct from the filled Calculate button",
+        "The Clear and error-focus tests in test/ux-enhancements.test.js pass under the existing npm test with zero failures"
+      ]
+    }
+  ],
+  "metadata": {
+    "epic_key": "CQA-5",
+    "prd_title": "PRD - TestClaudeQA",
+    "generated": "2026-11-17T04:56:41.740941Z",
+    "total": 2,
+    "p0_count": 0,
+    "p1_count": 2,
+    "p2_count": 0
+  }
+}
