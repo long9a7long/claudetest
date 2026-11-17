@@ -11,3 +11,11 @@ cases:
     export: "start"
     args: [0]
     expect: { type: "object" }  # auto-corrected by spec_autofix (proactive_spec_generated)
+  - name: "covers: Exported constants DISCOUNT_RATE equals 0.1, DISCOUNT_THRESHOLD_CENTS equals 10000, MAX_PRICE equals 1000000 and"
+    kind: "testcase"
+    skill_id: "SKILL_001"
+    epic_key: "CQA-3"
+    module: "public/calc.js"
+    export: "DISCOUNT_RATE"
+    args: []
+    expect: { equals: 0.1 }  # AI-proposed, human-approved — covers a previously-untested acceptance criterion
