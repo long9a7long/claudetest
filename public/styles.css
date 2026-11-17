@@ -4,6 +4,7 @@
   --color-text: #1b1f24;
   --color-text-secondary: #4b5563;
   --color-accent: #2f6feb;
+  --color-accent-contrast: #ffffff;
   --color-error: #b3261e;
   --color-success: #1a7f45;
   --color-border: #d0d4da;
@@ -16,8 +17,13 @@
   --space-8: 2rem;
 
   --radius-1: 0.5rem;
+  --shadow-card: 0 1px 2px rgba(27, 31, 36, 0.08);
 
   --font-stack: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+
+  /* Layout breakpoint: 768px is the mobile/desktop split reused by later tasks. */
+  --page-padding: 16px;
+  --card-max-width: 420px;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -27,44 +33,70 @@
     --color-text: #f4f5f7;
     --color-text-secondary: #c2c8d1;
     --color-accent: #6ea8fe;
+    --color-accent-contrast: #1b1f24;
     --color-error: #ff6b63;
     --color-success: #4fd17a;
     --color-border: #3a414c;
   }
 }
 
-* {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
 }
 
 body {
   margin: 0;
-  min-height: 100vh;
   background-color: var(--color-bg);
   color: var(--color-text);
   font-family: var(--font-stack);
   line-height: 1.5;
+  padding: var(--page-padding);
+}
+
+/* Desktop breakpoint: page padding grows from 16px to 32px. */
+@media (min-width: 768px) {
+  body {
+    padding: 32px;
+  }
 }
 
 main {
   display: flex;
-  justify-content: center;
-  padding: var(--space-6) var(--space-4);
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
 }
 
 .card {
   width: 100%;
-  max-width: 28rem;
+  max-width: var(--card-max-width);
+  margin: 0 auto;
+  min-width: 0;
+  overflow-wrap: break-word;
   background-color: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-1);
+  box-shadow: var(--shadow-card);
   padding: var(--space-6);
 }
 
 h1 {
-  margin: 0 0 var(--space-4);
-  font-size: 1.5rem;
-  line-height: 1.5;
+  margin: 0;
+  font-size: 1.75rem;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+img,
+svg,
+video {
+  max-width: 100%;
 }
 
 a:focus-visible,
