@@ -1,0 +1,57 @@
+{
+  "skills": [
+    {
+      "name": "Static server with security headers",
+      "tool": "Express / Node.js (server.js)",
+      "priority": "P0",
+      "skill_id": "SKILL_001",
+      "testcases": [],
+      "capability": "Refactors server.js to export the Express app and a start function (port from process.env.PORT, default 4173), serves only the public/ directory with 404 for unknown paths, disables X-Powered-By, sets Content-Security-Policy: default-src 'self' on every response, and never sets cookies or exposes calculation/data APIs.",
+      "dependencies": [],
+      "prompt_template": "You are a Node.js backend engineer. Refactor the existing server.js so it builds the Express app and exports it (module.exports = { app, start }). Use `require.main === module` to call listen only when run directly, and read the port from process.env.PORT falling back to 4173. The start function must accept an optional port (including 0 for ephemeral) and return the http.Server so tests can close it. Call app.disable('x-powered-by'). Register a middleware before express.static that sets `Content-Security-Policy: default-src 'self'` on every response, including 404s. The only route handling is express.static on path.join(__dirname, 'public'); do not expose the repo root, server.js, package.json, node_modules or test/. GET / must return index.html as text/html with status 200 and any unknown path must return 404. Do not add API routes, calculation endpoints, body parsers, sessions, cookie middleware or helmet, and keep express as the only runtime dependency. If public/index.html uses inline scripts or styles, move them into external files rather than loosening the policy. Do not change what the existing smoke test expects.",
+      "acceptance_criteria": [
+        "require('./server.js') does not bind any port and does not keep the Node process alive after the script finishes",
+        "The module exports the Express app and a start function; start(0) listens on an ephemeral port, returns an http.Server, and server.close() succeeds",
+        "Running `PORT=5000 node server.js` accepts connections on port 5000, and running `node server.js` with PORT unset accepts connections on port 4173",
+        "GET / returns status 200 with a Content-Type header containing text/html",
+        "GET /nonexistent, GET /server.js, GET /package.json and GET /api/calculate each return 404, and GET /../package.json does not return the contents of package.json",
+        "Responses to GET /, GET /styles.css and GET /nonexistent have header content-security-policy exactly equal to \"default-src 'self'\"",
+        "Responses to GET / and GET /nonexistent have no x-powered-by header and no set-cookie header",
+        "public/index.html contains no inline <script> bodies, inline style attributes or <style> blocks",
+        "server.js contains no app.post/app.put/express.json()/session/cookie middleware and requires only express, path and node built-ins; package.json dependencies contains only express",
+        "test/smoke.test.js still passes after the refactor"
+      ]
+    },
+    {
+      "name": "Server tests with node:test",
+      "tool": "node:test, node:assert, node:http",
+      "priority": "P0",
+      "skill_id": "SKILL_002",
+      "testcases": [],
+      "capability": "Writes test/server.test.js using node --test to verify port handling, startup time within 3 seconds, static serving, 404, security headers, absence of cookies and the dependency policy.",
+      "dependencies": [
+        "SKILL_001"
+      ],
+      "prompt_template": "You are a test engineer. Create test/server.test.js using only node:test, node:assert/strict and node's built-in http/fetch (no supertest or other dev packages). Import the exported app/start from server.js, boot it on an ephemeral port in before hooks and close it in after hooks. Cover: default port (4173) when PORT is unset and the PORT=5000 override (resolve the port through the exported logic or spawn `node server.js` with a PORT env and probe it), GET / returns 200 and text/html, GET /nonexistent returns 404, CSP header equals default-src 'self', X-Powered-By absent, Set-Cookie absent, and package.json listing express as the only runtime dependency with no UI libraries (react, vue, angular, svelte, jquery, bootstrap, etc.). Add a startup-time test that spawns `node server.js` and asserts the first successful GET / happens within 3000 ms. Always kill child processes in cleanup so the test run never hangs.",
+      "acceptance_criteria": [
+        "`node --test test/server.test.js` exits 0 on the completed server and runs at least 8 test cases",
+        "A test asserts a spawned `node server.js` with PORT=5000 accepts a connection on port 5000, and another asserts the default port resolves to 4173 when PORT is unset",
+        "A test asserts GET / returns 200 with a content-type containing text/html, and GET /nonexistent returns 404",
+        "A test asserts the content-security-policy header equals \"default-src 'self'\", x-powered-by is absent, and set-cookie is absent",
+        "A test asserts package.json dependencies keys equal ['express'] and no UI library names appear in dependencies or devDependencies",
+        "A test measures the time from spawning `node server.js` to the first 200 response from GET / and asserts it is ≤ 3000 ms",
+        "Temporarily removing the CSP middleware from server.js causes `node --test test/server.test.js` to exit non-zero",
+        "The test process exits on its own without hanging (no open handles after after() hooks)"
+      ]
+    }
+  ],
+  "metadata": {
+    "epic_key": "CQA-2",
+    "prd_title": "PRD - TestClaudeQA",
+    "generated": "2026-11-17T04:56:41.740941Z",
+    "total": 2,
+    "p0_count": 2,
+    "p1_count": 0,
+    "p2_count": 0
+  }
+}
