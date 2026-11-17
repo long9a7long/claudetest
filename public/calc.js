@@ -125,6 +125,20 @@
     return s.slice(0, -2) + '.' + s.slice(-2);
   }
 
+  function savingsCents(subtotalCents) {
+    if (subtotalCents < CONSTANTS.DISCOUNT_THRESHOLD_CENTS) {
+      return 0;
+    }
+    return Math.floor((subtotalCents * 10 + 50) / 100);
+  }
+
+  function remainingToThresholdCents(subtotalCents) {
+    if (subtotalCents >= CONSTANTS.DISCOUNT_THRESHOLD_CENTS) {
+      return 0;
+    }
+    return CONSTANTS.DISCOUNT_THRESHOLD_CENTS - subtotalCents;
+  }
+
   const api = Object.freeze({
     CONSTANTS,
     DISCOUNT_RATE: CONSTANTS.DISCOUNT_RATE,
@@ -135,7 +149,9 @@
     parseQuantity,
     validateInputs,
     calculate,
-    formatCents
+    formatCents,
+    savingsCents,
+    remainingToThresholdCents
   });
 
   return api;

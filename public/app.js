@@ -13,6 +13,8 @@ function init() {
   const discountEl = document.getElementById('result-discount');
   const totalEl = document.getElementById('result-total');
   const noteEl = document.getElementById('discount-note');
+  const savingsEl = document.getElementById('savings');
+  const hintEl = document.getElementById('threshold-hint');
 
   if (!form || !Calc) {
     return;
@@ -43,6 +45,10 @@ function init() {
     discountEl.textContent = '';
     totalEl.textContent = '';
     noteEl.textContent = '';
+    savingsEl.textContent = '';
+    savingsEl.hidden = true;
+    hintEl.textContent = '';
+    hintEl.hidden = true;
   }
 
   function showResults(subtotalCents, discountCents, totalCents) {
@@ -50,6 +56,20 @@ function init() {
     discountEl.textContent = Calc.formatCents(discountCents);
     totalEl.textContent = Calc.formatCents(totalCents);
     noteEl.textContent = discountCents > 0 ? '10% discount applied' : 'No discount applied';
+
+    if (discountCents > 0) {
+      savingsEl.textContent = 'You saved ' + Calc.formatCents(discountCents);
+      savingsEl.hidden = false;
+      hintEl.textContent = '';
+      hintEl.hidden = true;
+    } else {
+      const remainingCents = Calc.remainingToThresholdCents(subtotalCents);
+      hintEl.textContent = 'Add ' + Calc.formatCents(remainingCents) + ' more to get 10% off';
+      hintEl.hidden = false;
+      savingsEl.textContent = '';
+      savingsEl.hidden = true;
+    }
+
     results.hidden = false;
   }
 
