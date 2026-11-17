@@ -1,0 +1,59 @@
+{
+  "skills": [
+    {
+      "name": "Visual Design, Form Controls and Responsive Layout",
+      "tool": "CSS (public/styles.css) and semantic HTML (public/index.html)",
+      "priority": "P0",
+      "skill_id": "SKILL_001",
+      "testcases": [],
+      "capability": "Applies the PRD design tokens, flat card, typography, results list, form controls and Calculate/Clear buttons in a mobile-first layout that has no horizontal scroll from 320px to 1920px.",
+      "dependencies": [],
+      "prompt_template": "You are implementing the full visual layer of the cart calculator in public/styles.css (plus minimal semantic changes in public/index.html), with no external fonts, CDNs, @import or frameworks. Write mobile-first CSS with the 320px layout as the base and box-sizing border-box. Use page background #F6F7F9, text #1A1A1A, a system font stack and a 16px minimum base size. Style the card flat with a 1px #E3E6EB border, a soft shadow, a 12px radius, width 100% and max-width 420px, centered horizontally and placed near the top of the page (not vertically centered), with 16px side padding on a 4/8px spacing scale. Style the h1 at 24px/600 and secondary text in muted #5B6470. Style the results as a definition-style list: label on the left, amount right-aligned, a 1px divider above Total, Total at 32px/700 with font-variant-numeric: tabular-nums, long amounts wrapping without overflow, and the discount amount in #067647 (the 'discount applied' / 'No discount applied' text must remain so color is never the only signal). Place labels above the fields at 16px; make inputs 48px tall with an 8px radius, a visible neutral border, 16px font size and full width. Show error text below each field in #B42318 and give inputs with aria-invalid='true' a #B42318 border. Make the Calculate button full-width, 48px tall, background #1F5EFF with white text, an 8px radius and a darker hover/active shade, and make the Clear button an outlined secondary (transparent background, 1px #1F5EFF border and text, same height and radius). Ensure the viewport meta tag (width=device-width, initial-scale=1) is present, use only min-width media queries, and keep every control at least 44x44px. Reuse the existing markup and class names.",
+      "acceptance_criteria": [
+        "public/styles.css sets body background #F6F7F9 and text color #1A1A1A, and contains no @import, url(http...) or external font references",
+        "The card rule has border 1px solid #E3E6EB, border-radius 12px, a box-shadow and max-width 420px; at 1280px the card is no wider than 420px and its top edge is within 120px of the viewport top",
+        "The h1 computed style is font-size 24px and font-weight 600; the Total element has font-size 32px, font-weight 700 and font-variant-numeric: tabular-nums",
+        "The discount amount uses color #067647 and its row also contains the text 'discount applied' or 'No discount applied'",
+        "After a successful calculation, the results list shows labels on the left, amounts right-aligned and a divider line above Total",
+        "Computed height of the Price input, Quantity input, Calculate button and Clear button is at least 48px; inputs have border-radius 8px and computed font-size of at least 16px; each label renders above its input",
+        "The Calculate button has background-color #1F5EFF, white text and fills the full card content width; its :hover rule defines a darker background; the Clear button has a transparent background and a visible 1px border",
+        "An input with aria-invalid='true' renders a #B42318 border and its error text element has color #B42318; submitting empty fields in the running app shows red-bordered inputs with red error text directly below each field",
+        "index.html contains <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"> and styles.css uses min-width media queries rather than max-width queries for layout",
+        "At viewport widths 320, 375, 768, 1280 and 1920px, document.documentElement.scrollWidth is not greater than window.innerWidth",
+        "At 320px, the card has at least 8px of margin on each side, the Total amount '1,000,000.00' does not overflow the card, and every input and button has a bounding box of at least 44x44px"
+      ]
+    },
+    {
+      "name": "Accessibility, Focus States and Lighthouse Verification",
+      "tool": "HTML (public/index.html), CSS (public/styles.css), WCAG contrast calculation, Lighthouse CLI, README",
+      "priority": "P0",
+      "skill_id": "SKILL_002",
+      "testcases": [],
+      "capability": "Ensures semantic HTML, visible focus rings, reduced-motion support, WCAG 2.1 AA contrast and keyboard operability, and records Lighthouse and keyboard walkthrough results.",
+      "dependencies": [
+        "SKILL_001"
+      ],
+      "prompt_template": "You are making the cart calculator accessible and verifying it, in public/index.html and public/styles.css without changing calculation behavior. Ensure <html lang=\"en\">, a non-empty <title>, a single <main> containing one <h1> and a <form> with labels tied to inputs via for/id, a DOM order that gives the tab order Price, Quantity, Calculate, Clear, and no tabindex above 0. Add a :focus-visible rule for inputs, buttons and any other interactive element with a 2px solid #1F5EFF outline and a 2px outline-offset, never removing an outline without a replacement. Keep transitions short and add a @media (prefers-reduced-motion: reduce) block that disables transitions and animations. Verify that every text/background pair (body text, muted #5B6470, #B42318 errors, #067647 discount text, white on #1F5EFF, Clear button text, and the savings line and threshold hint if present) has a contrast ratio of at least 4.5:1, adjusting colors minimally only if one fails; errors and discounts must keep explanatory text. Then start the server, run Lighthouse (mobile profile, Fast 3G throttling) using npx or a devDependency only, fix any failures minimally, perform a keyboard-only walkthrough (Tab, Shift+Tab, Enter, Space: calculate, trigger an error and land on the first invalid field, Clear and return to Price), and record the Lighthouse scores, FCP and walkthrough results in a 'Verification' section of the README.",
+      "acceptance_criteria": [
+        "index.html has <html lang=\"en\">, a non-empty <title>, exactly one <main>, exactly one <h1> and a <form> element; each input has a <label> whose for attribute matches the input id",
+        "No element has a tabindex greater than 0, and the keyboard tab order in the running app is Price, Quantity, Calculate, Clear with no keyboard trap",
+        "styles.css has a :focus-visible rule giving inputs and buttons outline: 2px solid #1F5EFF and outline-offset: 2px, and no rule sets outline: none or outline: 0 on an interactive element without a replacement indicator",
+        "A @media (prefers-reduced-motion: reduce) block sets transition and animation to none or a near-zero duration",
+        "The computed contrast ratio is at least 4.5:1 for #1A1A1A on #F6F7F9, #5B6470 on white and on #F6F7F9, #B42318 on white, #067647 on white, and white on #1F5EFF",
+        "Pressing Enter in the Price or Quantity field triggers the calculation, and every control can be operated by keyboard alone",
+        "Lighthouse on / reports an Accessibility score of at least 95 with no failing color-contrast, label, lang or landmark audits, and FCP of at most 1.5 s on the Fast 3G profile",
+        "README.md has a Verification section listing the Lighthouse Accessibility score, the FCP value and a pass result for each keyboard walkthrough step: Tab order, Enter-to-calculate, error focus on the first invalid field, and Clear returning focus to Price",
+        "package.json runtime dependencies still contain only express, and `npm test` passes"
+      ]
+    }
+  ],
+  "metadata": {
+    "epic_key": "CQA-6",
+    "prd_title": "PRD - TestClaudeQA",
+    "generated": "2026-11-17T04:56:41.740941Z",
+    "total": 2,
+    "p0_count": 2,
+    "p1_count": 0,
+    "p2_count": 0
+  }
+}
