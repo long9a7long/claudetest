@@ -160,3 +160,135 @@ test('PORT=5050 node server.js logs and responds on 5050', async () => {
     child.kill('SIGTERM');
   }
 });
+
+test('require("../server.js") does not bind a port or keep the process alive', () => {
+  const { spawnSync } = require('node:child_process');
+  const result = spawnSync('node', ['-e', "require('./server.js')"], {
+    cwd: path.join(__dirname, '..'),
+    timeout: 3000,
+  });
+  assert.equal(result.status, 0, `expected clean exit, got ${result.status}, stderr: ${result.stderr}`);
+});
+
+test('start(0) returns an http.Server on an ephemeral port and closes cleanly', async () => {
+  const http = require('node:http');
+  delete require.cache[require.resolve('../server.js')];
+  const { start } = require('../server.js');
+  const server = start(0);
+  assert.ok(server instanceof http.Server);
+  await new Promise((resolve) => server.once('listening', resolve));
+  assert.ok(server.address().port > 0);
+  await new Promise((resolve, reject) => {
+    server.close((err) => (err ? reject(err) : resolve()));
+  });
+});
+
+test('GET / returns 200 with text/html content-type', async () => {
+  delete require.cache[require.resolve('../server.js')];
+  const { start } = require('../server.js');
+  const server = start(0);
+  await new Promise((resolve) => server.once('listening', resolve));
+  const port = server.address().port;
+  try {
+    const res = await fetch(`http://localhost:${port}/`);
+    assert.equal(res.status, 200);
+    assert.match(res.headers.get('content-type') || '', /text\/html/);
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+  }
+});
+
+test('unknown and sensitive paths return 404', async () => {
+  delete require.cache[require.resolve('../server.js')];
+  const { start } = require('../server.js');
+  const server = start(0);
+  await new Promise((resolve) => server.once('listening', resolve));
+  const port = server.address().port;
+  try {
+    for (const p of ['/nonexistent', '/server.js', '/package.json', '/api/calculate']) {
+      const res = await fetch(`http://localhost:${port}${p}`);
+      assert.equal(res.status, 404, `expected 404 for ${p}, got ${res.status}`);
+    }
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+  }
+});
+
+test('path traversal to /../package.json does not leak package.json contents', async () => {
+  const http = require('node:http');
+  delete require.cache[require.resolve('../server.js')];
+  const { start } = require('../server.js');
+  const server = start(0);
+  await new Promise((resolve) => server.once('listening', resolve));
+  const port = server.address().port;
+  try {
+    const result = await new Promise((resolve, reject) => {
+      const req = http.request(
+        { host: 'localhost', port, path: '/../package.json', method: 'GET' },
+        (res) => {
+          let body = '';
+          res.on('data', (chunk) => (body += chunk));
+          res.on('end', () => resolve({ status: res.statusCode, body }));
+        }
+      );
+      req.on('error', reject);
+      req.end();
+    });
+    const isLeaked = result.status === 200 && result.body.includes('"testclaudeqa"');
+    assert.equal(isLeaked, false, 'package.json must not be served via traversal');
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+  }
+});
+
+test('CSP, x-powered-by and set-cookie headers across / , /styles.css and /nonexistent', async () => {
+  delete require.cache[require.resolve('../server.js')];
+  const { start } = require('../server.js');
+  const server = start(0);
+  await new Promise((resolve) => server.once('listening', resolve));
+  const port = server.address().port;
+  try {
+    for (const p of ['/', '/styles.css', '/nonexistent']) {
+      const res = await fetch(`http://localhost:${port}${p}`);
+      assert.equal(res.headers.get('content-security-policy'), "default-src 'self'", `CSP mismatch for ${p}`);
+      assert.equal(res.headers.get('set-cookie'), null, `unexpected set-cookie for ${p}`);
+    }
+    const rootRes = await fetch(`http://localhost:${port}/`);
+    assert.equal(rootRes.headers.get('x-powered-by'), null);
+    const notFoundRes = await fetch(`http://localhost:${port}/nonexistent`);
+    assert.equal(notFoundRes.headers.get('x-powered-by'), null);
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+  }
+});
+
+test('public/index.html has no inline <script> bodies, inline styles or <style> blocks', () => {
+  const html = fs.readFileSync(path.join(__dirname, '..', 'public', 'index.html'), 'utf8');
+  assert.doesNotMatch(html, /<style[\s>]/i, 'no <style> blocks allowed');
+  assert.doesNotMatch(html, /\sstyle\s*=/i, 'no inline style attributes allowed');
+  const scriptTags = [...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)];
+  for (const [, attrs, body] of scriptTags) {
+    assert.match(attrs, /\bsrc\s*=/i, 'script tags must use src, not inline bodies');
+    assert.equal(body.trim(), '', 'script tags with a src must not also contain inline code');
+  }
+});
+
+test('server.js has no body-parser/session/cookie middleware or extra routes, and requires only express/path/builtins', () => {
+  const src = fs.readFileSync(path.join(__dirname, '..', 'server.js'), 'utf8');
+  assert.doesNotMatch(src, /app\.post\s*\(/);
+  assert.doesNotMatch(src, /app\.put\s*\(/);
+  assert.doesNotMatch(src, /express\.json\s*\(/);
+  assert.doesNotMatch(src, /session/i);
+  assert.doesNotMatch(src, /cookie/i);
+
+  const builtins = new Set(require('node:module').builtinModules);
+  const requireCalls = [...src.matchAll(/require\(\s*['"]([^'"]+)['"]\s*\)/g)].map((m) => m[1]);
+  assert.ok(requireCalls.length > 0, 'expected at least one require call');
+  for (const mod of requireCalls) {
+    const normalized = mod.replace(/^node:/, '');
+    assert.ok(
+      normalized === 'express' || normalized === 'path' || builtins.has(normalized),
+      `unexpected require target: ${mod}`
+    );
+  }
+});
