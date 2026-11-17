@@ -116,6 +116,21 @@ test('package.json declares express as the only runtime dependency and start scr
   assert.equal(pkg.scripts.start, 'node server.js');
 });
 
+test('no UI library dependencies are present in dependencies or devDependencies', () => {
+  const pkgPath = path.join(__dirname, '..', 'package.json');
+  const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+  const uiLibraries = [
+    'react', 'react-dom', 'vue', 'svelte', 'angular', '@angular/core',
+    'preact', 'solid-js', 'jquery', 'bootstrap', 'tailwindcss', '@mui/material',
+  ];
+  const deps = Object.keys(pkg.dependencies || {});
+  const devDeps = Object.keys(pkg.devDependencies || {});
+  for (const lib of uiLibraries) {
+    assert.ok(!deps.includes(lib), `dependencies must not include ${lib}`);
+    assert.ok(!devDeps.includes(lib), `devDependencies must not include ${lib}`);
+  }
+});
+
 test('required placeholder files and test directory exist', () => {
   const root = path.join(__dirname, '..');
   const required = [
@@ -156,6 +171,66 @@ test('PORT=5050 node server.js logs and responds on 5050', async () => {
     assert.equal(port, 5050);
     const res = await fetch('http://localhost:5050/');
     assert.equal(res.status, 200);
+  } finally {
+    child.kill('SIGTERM');
+  }
+});
+
+test('PORT=5000 node server.js accepts a connection on port 5000', async () => {
+  const { child, port } = await runServerProcess({ ...process.env, PORT: '5000' });
+  try {
+    assert.equal(port, 5000);
+    const res = await fetch('http://localhost:5000/');
+    assert.equal(res.status, 200);
+  } finally {
+    child.kill('SIGTERM');
+  }
+});
+
+test('spawned server reaches first 200 response within 3000ms of being spawned', async () => {
+  const env = { ...process.env, PORT: '5099' };
+  const startedAt = Date.now();
+  const child = spawn('node', ['server.js'], {
+    cwd: path.join(__dirname, '..'),
+    env,
+  });
+  try {
+    const port = await new Promise((resolve, reject) => {
+      let stdout = '';
+      const timer = setTimeout(() => reject(new Error(`no listening log: ${stdout}`)), 5000);
+      child.stdout.on('data', (chunk) => {
+        stdout += chunk.toString();
+        const match = stdout.match(/listening on port (\d+)/);
+        if (match) {
+          clearTimeout(timer);
+          resolve(Number(match[1]));
+        }
+      });
+      child.on('error', (err) => {
+        clearTimeout(timer);
+        reject(err);
+      });
+    });
+
+    let elapsed;
+    const deadline = Date.now() + 3000;
+    for (;;) {
+      try {
+        const res = await fetch(`http://localhost:${port}/`);
+        if (res.status === 200) {
+          await res.text();
+          elapsed = Date.now() - startedAt;
+          break;
+        }
+      } catch {
+        // server not accepting connections yet
+      }
+      if (Date.now() > deadline) {
+        throw new Error('server did not return a 200 response within 3000ms');
+      }
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    }
+    assert.ok(elapsed <= 3000, `startup + first 200 took ${elapsed}ms, expected <= 3000ms`);
   } finally {
     child.kill('SIGTERM');
   }
