@@ -162,3 +162,130 @@ test('calc.js remainingToThresholdCents boundary cases: 99.99 gives 1 cent, 100.
   assert.equal(Calc.remainingToThresholdCents(10001), 0);
   assert.equal(Calc.remainingToThresholdCents(1999), 8001);
 });
+
+const stylesPath = path.join(__dirname, '..', 'public', 'styles.css');
+const stylesSource = fs.readFileSync(stylesPath, 'utf8');
+
+test('Clear button exists with text "Clear", type="button", and does not submit the form', () => {
+  const dom = makeDom();
+  const { document } = dom.window;
+  const clearButton = document.getElementById('clear');
+
+  assert.ok(clearButton, 'expected #clear button to exist');
+  assert.equal(clearButton.textContent.trim(), 'Clear');
+  assert.equal(clearButton.getAttribute('type'), 'button');
+
+  let submitted = false;
+  document.getElementById('calc-form').addEventListener('submit', () => {
+    submitted = true;
+  });
+  clearButton.click();
+  assert.equal(submitted, false);
+});
+
+test('Clear after a successful calculation empties inputs and removes the results, savings and hint', () => {
+  const dom = makeDom();
+  const { document } = dom.window;
+
+  fillAndSubmit(dom, '100', '1');
+  assert.equal(document.getElementById('savings').textContent, 'You saved 10.00');
+
+  document.getElementById('clear').click();
+
+  assert.equal(document.getElementById('price').value, '');
+  assert.equal(document.getElementById('quantity').value, '');
+  const results = document.getElementById('results');
+  assert.equal(results.hasAttribute('hidden'), true);
+  assert.equal(document.getElementById('result-subtotal').textContent, '');
+  assert.equal(document.getElementById('result-discount').textContent, '');
+  assert.equal(document.getElementById('result-total').textContent, '');
+  assert.equal(document.getElementById('savings').textContent, '');
+  assert.equal(document.getElementById('savings').hasAttribute('hidden'), true);
+  assert.equal(document.getElementById('threshold-hint').textContent, '');
+  assert.equal(document.getElementById('threshold-hint').hasAttribute('hidden'), true);
+});
+
+test('Clear after a failed calculation removes all error text and aria-invalid from both inputs', () => {
+  const dom = makeDom();
+  const { document } = dom.window;
+
+  fillAndSubmit(dom, 'abc', '');
+  assert.ok(document.getElementById('price').getAttribute('aria-invalid'));
+  assert.notEqual(document.getElementById('price-error').textContent, '');
+
+  document.getElementById('clear').click();
+
+  assert.equal(document.getElementById('price-error').textContent, '');
+  assert.equal(document.getElementById('quantity-error').textContent, '');
+  assert.equal(document.getElementById('price').hasAttribute('aria-invalid'), false);
+  assert.equal(document.getElementById('quantity').hasAttribute('aria-invalid'), false);
+  assert.equal(document.getElementById('price').hasAttribute('aria-describedby'), false);
+  assert.equal(document.getElementById('quantity').hasAttribute('aria-describedby'), false);
+});
+
+test('Clicking Clear moves focus to the Price input', () => {
+  const dom = makeDom();
+  const { document } = dom.window;
+
+  fillAndSubmit(dom, '100', '1');
+  document.getElementById('clear').click();
+
+  assert.equal(document.activeElement, document.getElementById('price'));
+});
+
+test('failed submission with empty price and valid quantity focuses the Price input', () => {
+  const dom = makeDom();
+  const { document } = dom.window;
+  fillAndSubmit(dom, '', '2');
+  assert.equal(document.activeElement, document.getElementById('price'));
+});
+
+test('failed submission with valid price and empty quantity focuses the Quantity input', () => {
+  const dom = makeDom();
+  const { document } = dom.window;
+  fillAndSubmit(dom, '10', '');
+  assert.equal(document.activeElement, document.getElementById('quantity'));
+});
+
+test('failed submission with both fields invalid focuses the Price input first', () => {
+  const dom = makeDom();
+  const { document } = dom.window;
+  fillAndSubmit(dom, '', '');
+  assert.equal(document.activeElement, document.getElementById('price'));
+});
+
+test('a successful calculation does not move focus away from the element focused at submit time', () => {
+  const dom = makeDom();
+  const { document } = dom.window;
+  const quantity = document.getElementById('quantity');
+  document.getElementById('price').value = '100';
+  quantity.value = '1';
+  quantity.focus();
+  assert.equal(document.activeElement, quantity);
+
+  const form = document.getElementById('calc-form');
+  const submitEvent = new dom.window.Event('submit', { bubbles: true, cancelable: true });
+  form.dispatchEvent(submitEvent);
+
+  assert.equal(document.activeElement, quantity);
+});
+
+test('.btn-secondary styles the Clear button as a transparent, bordered, 44px touch target distinct from .btn-primary', () => {
+  const secondaryMatch = stylesSource.match(/\.btn-secondary\s*{([^}]*)}/);
+  assert.ok(secondaryMatch, 'expected a .btn-secondary rule in styles.css');
+  const secondaryBody = secondaryMatch[1];
+
+  assert.match(secondaryBody, /background-color:\s*transparent/);
+  assert.match(secondaryBody, /border-color:\s*var\(--color-accent\)/);
+  assert.doesNotMatch(secondaryBody, /background-color:\s*var\(--color-accent\)[^-]/);
+
+  const btnMatch = stylesSource.match(/\.btn\s*{([^}]*)}/);
+  assert.ok(btnMatch, 'expected a shared .btn rule in styles.css');
+  assert.match(btnMatch[1], /min-width:\s*var\(--control-min-height\)/);
+  assert.match(btnMatch[1], /min-height:\s*var\(--control-min-height\)/);
+
+  const primaryMatch = stylesSource.match(/\.btn-primary\s*{([^}]*)}/);
+  assert.ok(primaryMatch, 'expected a .btn-primary rule in styles.css');
+  assert.match(primaryMatch[1], /background-color:\s*var\(--color-accent\)/);
+  assert.notEqual(primaryMatch[1].trim(), secondaryBody.trim());
+});
