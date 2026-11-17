@@ -83,3 +83,11 @@ cases:
     export: "calculate"
     args: [0, 5]
     expect: { equals: {"subtotalCents": 0, "discountCents": 0, "totalCents": 0} }  # AI-proposed, human-approved — covers a previously-untested acceptance criterion
+  - name: "covers: calculate(100000000, 10000) returns Number.isInteger true for all three fields with no fractional cents"
+    kind: "testcase"
+    skill_id: "SKILL_002"
+    epic_key: "CQA-3"
+    module: "public/calc.js"
+    export: "calculate"
+    args: [100000000, 10000]
+    expect: { contains: {"subtotalCents": 1000000000000, "discountCents": 100000000000, "totalCents": 900000000000} }  # AI-proposed, human-approved — covers a previously-untested acceptance criterion
