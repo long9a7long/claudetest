@@ -1,0 +1,53 @@
+{
+  "skills": [
+    {
+      "name": "Initialize repo and minimal Express static server",
+      "tool": "npm / Node.js / Express",
+      "priority": "P0",
+      "skill_id": "SKILL_001",
+      "testcases": [],
+      "capability": "Create the greenfield repo skeleton (package.json with express as the only runtime dependency, start script, .gitignore, placeholder file layout) and a minimal server.js that serves public/ on process.env.PORT (default 4173) and can be started by tests on an ephemeral port.",
+      "dependencies": [],
+      "prompt_template": "You are initializing an empty repo for a Node.js + Express + vanilla HTML/CSS/JS app. Create package.json with `express` as the ONLY entry in dependencies and a `start` script (`node server.js`); do not add a `test` script or test files, since test wiring belongs to the Express Server epic. Add .gitignore (node_modules, logs, .env, coverage, OS files). Create the layout server.js, public/index.html, public/styles.css, public/app.js, public/calc.js and test/ as minimal placeholders; do not add UI libraries, CSS frameworks or domain logic. In server.js create an Express app that serves the public/ directory with express.static and listens on process.env.PORT or 4173 only when run directly (`require.main === module`), logging the listening port, and export the app so tests can listen on port 0. Do NOT add security headers, custom 404 handling or other hardening; those belong to the Express Server epic. Run `npm install` to generate the lockfile.",
+      "acceptance_criteria": [
+        "package.json lists `express` as the only key under dependencies and no other runtime dependency",
+        "`npm install` succeeds from a clean checkout and creates package-lock.json",
+        "package.json scripts.start equals `node server.js`",
+        "Files server.js, public/index.html, public/styles.css, public/app.js, public/calc.js exist and the test/ directory exists",
+        "`.gitignore` contains the entries node_modules and .env",
+        "`npm start` starts the server and logs the listening port; with no PORT set it listens on 4173, and `PORT=5050 npm start` makes it respond on http://localhost:5050/",
+        "`GET /` returns HTTP 200 and `GET /styles.css` returns HTTP 200 with a CSS content type",
+        "`require('./server.js')` does not bind a port on import and exposes the app so a test can listen on port 0"
+      ]
+    },
+    {
+      "name": "App shell HTML and CSS baseline",
+      "tool": "HTML5 / CSS3 (vanilla)",
+      "priority": "P0",
+      "skill_id": "SKILL_002",
+      "testcases": [],
+      "capability": "Build the real index.html app shell (card container, h1, semantic main) and the global styles.css baseline with design tokens.",
+      "dependencies": [
+        "SKILL_001"
+      ],
+      "prompt_template": "You are building the real first screen shell, not a starter page, using vanilla HTML and CSS only (no frameworks). index.html must have `<html lang=\"en\">`, a viewport meta tag, a semantic `<main>`, an `<h1>` page title, and a centered single-column card container (max-width 420px, near the top of the page, with an identifiable id/class such as `#card` where the calculator form will mount), and must load styles.css, calc.js and app.js. In styles.css define the system font stack, 16px base size, a spacing scale (e.g. 4/8/12/16/24/32px) as custom properties, color custom properties from the PRD palette (background, surface, text, accent, error with WCAG AA contrast), page padding of 16px on mobile and 32px at desktop widths via a media query, and style the card as a rounded, padded surface with a subtle border/shadow and no horizontal scroll from 320px to 1920px.",
+      "acceptance_criteria": [
+        "index.html contains `<html lang=\"en\">`, a `<meta name=\"viewport\">` tag, a `<main>` element and exactly one `<h1>` with non-empty text",
+        "index.html contains the card container element (e.g. `#card`) inside `<main>` and references styles.css, calc.js and app.js via link/script tags",
+        "Opening http://localhost:4173 shows the h1 and a centered card near the top of the page, not a default or framework starter page",
+        "styles.css defines `:root` custom properties for the color palette and spacing scale and sets html font-size to 16px with a system font stack",
+        "The card has max-width 420px and body/page padding is 16px at mobile width and 32px at desktop width (via media query)",
+        "At 320px viewport width the page has no horizontal scroll"
+      ]
+    }
+  ],
+  "metadata": {
+    "epic_key": "CQA-1",
+    "prd_title": "PRD - TestClaudeQA",
+    "generated": "2026-11-17T04:56:41.740941Z",
+    "total": 2,
+    "p0_count": 2,
+    "p1_count": 0,
+    "p2_count": 0
+  }
+}
