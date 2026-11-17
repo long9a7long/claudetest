@@ -35,3 +35,11 @@ cases:
     export: "parsePriceToCents"
     args: ["abc"]
     expect: { contains: {"ok": false, "reason": "non-numeric"} }  # AI-proposed, human-approved — covers a previously-untested acceptance criterion
+  - name: "covers: validateInputs('', '') returns valid false with errors.price 'Enter a price.' and errors.quantity 'Enter a quant"
+    kind: "testcase"
+    skill_id: "SKILL_001"
+    epic_key: "CQA-3"
+    module: "public/calc.js"
+    export: "validateInputs"
+    args: ["", ""]
+    expect: { contains: {"valid": false, "errors": {"price": "Enter a price.", "quantity": "Enter a quantity."}} }  # AI-proposed, human-approved — covers a previously-untested acceptance criterion
