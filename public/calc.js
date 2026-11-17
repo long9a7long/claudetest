@@ -111,6 +111,20 @@
     return { valid: true, errors: {}, priceCents, quantity };
   }
 
+  function calculate(priceCents, quantity) {
+    const subtotalCents = priceCents * quantity;
+    const discountCents = subtotalCents >= CONSTANTS.DISCOUNT_THRESHOLD_CENTS
+      ? Math.floor((subtotalCents * 10 + 50) / 100)
+      : 0;
+    const totalCents = subtotalCents - discountCents;
+    return { subtotalCents, discountCents, totalCents };
+  }
+
+  function formatCents(cents) {
+    const s = String(cents).padStart(3, '0');
+    return s.slice(0, -2) + '.' + s.slice(-2);
+  }
+
   const api = Object.freeze({
     CONSTANTS,
     DISCOUNT_RATE: CONSTANTS.DISCOUNT_RATE,
@@ -119,7 +133,9 @@
     MAX_QUANTITY: CONSTANTS.MAX_QUANTITY,
     parsePriceToCents,
     parseQuantity,
-    validateInputs
+    validateInputs,
+    calculate,
+    formatCents
   });
 
   return api;
