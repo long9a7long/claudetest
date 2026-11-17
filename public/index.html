@@ -28,14 +28,20 @@
       </form>
       <section id="results" class="results" aria-live="polite" hidden>
         <dl class="results-list">
-          <dt>Subtotal</dt>
-          <dd id="result-subtotal">0.00</dd>
-          <dt>Discount</dt>
-          <dd id="result-discount">0.00</dd>
-          <dt>Total</dt>
-          <dd id="result-total">0.00</dd>
+          <div class="results-row">
+            <dt>Subtotal</dt>
+            <dd id="result-subtotal" class="result-amount">0.00</dd>
+          </div>
+          <div class="results-row results-row-discount">
+            <dt>Discount</dt>
+            <dd id="result-discount" class="result-amount result-amount-discount">0.00</dd>
+            <p id="discount-note" class="discount-note"></p>
+          </div>
+          <div class="results-row results-row-total">
+            <dt>Total</dt>
+            <dd id="result-total" class="result-amount result-amount-total">0.00</dd>
+          </div>
         </dl>
-        <p id="discount-note"></p>
         <p id="savings" class="savings" hidden></p>
         <p id="threshold-hint" class="hint" hidden></p>
       </section>

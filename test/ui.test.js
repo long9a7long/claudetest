@@ -211,7 +211,7 @@ test('app.js performs no parsing or discount arithmetic of its own', () => {
 });
 
 test('styles.css uses design tokens for min-height on inputs and the primary button', () => {
-  assert.match(cssSource, /--control-min-height:\s*2\.75rem/);
+  assert.match(cssSource, /--control-min-height:\s*3rem/);
   const inputBlock = cssSource.match(/\.field input\s*{([\s\S]*?)}/);
   const btnBlock = cssSource.match(/\.btn\s*{([\s\S]*?)}/);
   assert.ok(inputBlock, 'expected .field input rule');
