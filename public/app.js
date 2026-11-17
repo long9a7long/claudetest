@@ -4,6 +4,7 @@ function init() {
   const Calc = (typeof window !== 'undefined' && window.Calc)
     || (typeof global !== 'undefined' && global.Calc);
   const form = document.getElementById('calc-form');
+  const clearButton = document.getElementById('clear');
   const priceInput = document.getElementById('price');
   const quantityInput = document.getElementById('quantity');
   const priceError = document.getElementById('price-error');
@@ -32,6 +33,10 @@ function init() {
     field.input.removeAttribute('aria-describedby');
   }
 
+  function clearErrors() {
+    Object.keys(fields).forEach(clearFieldState);
+  }
+
   function setFieldError(name, message) {
     const field = fields[name];
     field.error.textContent = '⚠ ' + message;
@@ -39,7 +44,7 @@ function init() {
     field.input.setAttribute('aria-describedby', field.error.id);
   }
 
-  function hideResults() {
+  function clearResults() {
     results.hidden = true;
     subtotalEl.textContent = '';
     discountEl.textContent = '';
@@ -79,7 +84,7 @@ function init() {
     const validation = Calc.validateInputs(priceInput.value, quantityInput.value);
 
     if (!validation.valid) {
-      hideResults();
+      clearResults();
       Object.keys(fields).forEach((name) => {
         if (validation.errors[name]) {
           setFieldError(name, validation.errors[name]);
@@ -94,14 +99,24 @@ function init() {
       return;
     }
 
-    clearFieldState('price');
-    clearFieldState('quantity');
+    clearErrors();
 
     const { subtotalCents, discountCents, totalCents } = Calc.calculate(validation.priceCents, validation.quantity);
     showResults(subtotalCents, discountCents, totalCents);
   }
 
+  function handleClear() {
+    priceInput.value = '';
+    quantityInput.value = '';
+    clearErrors();
+    clearResults();
+    priceInput.focus();
+  }
+
   form.addEventListener('submit', handleSubmit);
+  if (clearButton) {
+    clearButton.addEventListener('click', handleClear);
+  }
 }
 
 if (typeof document !== 'undefined') {
