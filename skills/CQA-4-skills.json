@@ -1,0 +1,68 @@
+{
+  "skills": [
+    {
+      "name": "Calculator form, submit handler and results display",
+      "tool": "HTML5 / CSS / Vanilla JS DOM API (public/index.html, public/styles.css, public/app.js) consuming calc.js",
+      "priority": "P0",
+      "skill_id": "SKILL_001",
+      "testcases": [],
+      "capability": "Adds the accessible Price/Quantity form, Calculate button, per-field error containers and results panel skeleton to the app shell, and wires the submit event in app.js to read inputs, call calc.js and render Subtotal, Discount, Total and the discount note using textContent.",
+      "dependencies": [],
+      "prompt_template": "Extend the existing app shell card in public/index.html with a <form novalidate> containing two labeled type=\"text\" inputs: Price (id=price, inputmode=\"decimal\") and Quantity (id=quantity, inputmode=\"numeric\"), each with a visible <label for>, plus a primary Calculate submit button. Under each input add an empty error element (stable id, e.g. price-error / quantity-error) that app.js can link via aria-describedby, and add a results region with aria-live=\"polite\" that is hidden on first load and contains a definition list (<dl>) with Subtotal, Discount (plus a note element) and Total slots. Style with the existing design tokens in styles.css: rounded card, consistent spacing scale, full-width stacked fields with at least 44px tall inputs and button, a clearly styled primary button with a visible focus ring, large readable type for Priya-style less tech-confident users, WCAG AA contrast, and a layout with no horizontal scroll from 320px to 1920px. Do not add any inline scripts, external fonts, or network resources, since CSP is default-src 'self'. In public/app.js, attach a submit listener to the form that calls preventDefault, reads the raw values of #price and #quantity, and passes them to the existing calc.js validation and calculation functions; do NOT re-implement parsing, validation, rounding, or discount logic. On a valid result, use the cents formatter from calc.js to write Subtotal, Discount and Total with 2 decimals via textContent only (never innerHTML), set the note to '10% discount applied' when discount > 0 or 'No discount applied' otherwise, and unhide the results panel inside the aria-live region. Keep the code testable by exporting an init(document) style function or guarding browser-only code, so it loads in both browser and jsdom. Keep the compact rounded-card look with legible, high-contrast result typography and the Total visually emphasized.",
+      "acceptance_criteria": [
+        "public/index.html contains a <form> with input#price (type=\"text\", inputmode=\"decimal\") and input#quantity (type=\"text\", inputmode=\"numeric\")",
+        "Each input has a visible <label> whose for attribute equals the input's id",
+        "The form contains a button of type submit with the text 'Calculate'",
+        "The results region has aria-live=\"polite\" and is hidden in the initial HTML (hidden attribute or equivalent)",
+        "The results region contains a <dl> with Subtotal, Discount and Total entries and a discount note element",
+        "Each input has an associated empty error element with a unique id placed after the field",
+        "Inputs and the Calculate button have a computed min-height of at least 44px and styles.css uses the existing design tokens and spacing scale for the form",
+        "index.html contains no inline <script> and no external URLs",
+        "Submitting the form calls event.preventDefault so no page navigation or reload occurs",
+        "With price '50' and quantity '2', the results show Subtotal 100.00, Discount 10.00, Total 90.00 and the note '10% discount applied'",
+        "With price '10' and quantity '5', the results show Subtotal 50.00, Discount 0.00, Total 50.00 and the note 'No discount applied'",
+        "Pressing Enter in either field triggers the same calculation as clicking Calculate",
+        "app.js contains no innerHTML, outerHTML or insertAdjacentHTML usage and writes values only with textContent",
+        "app.js does not contain its own parsing or discount arithmetic and calls the calc.js API",
+        "In the running app, opening / shows the form with Price and Quantity fields and a Calculate button and no results panel; entering 50 and 2 and pressing Calculate reveals the results panel showing 100.00, 10.00 and 90.00 without reloading the page"
+      ]
+    },
+    {
+      "name": "Field errors, accessibility states and jsdom UI tests",
+      "tool": "Vanilla JS DOM API (public/app.js), public/styles.css, and jsdom with node:test (test/ui.test.js)",
+      "priority": "P0",
+      "skill_id": "SKILL_002",
+      "testcases": [],
+      "capability": "Renders the specific calc.js validation messages below each offending field with aria-invalid and aria-describedby, clears the results panel on invalid input and clears errors on success, and verifies the full UI behavior with jsdom tests against the real index.html, app.js and calc.js.",
+      "dependencies": [
+        "SKILL_001"
+      ],
+      "prompt_template": "Extend the submit handler in public/app.js to consume the per-field error messages returned by calc.js validation exactly as given (do not rewrite or recompute message text or rules). For each invalid field, write the message with textContent into its error element, prefixed by a visible icon/text marker (e.g. '⚠ ') so that errors never rely on color alone, set aria-invalid=\"true\" on the input and aria-describedby pointing at the error element's id; both field errors may display at once. When any field is invalid, hide and empty the results panel so no total is shown; on a successful calculation, clear all error text, remove aria-invalid and aria-describedby, and show results. Style errors in styles.css with a high-contrast (WCAG AA) error color, a red-bordered invalid input state supplemented by the text prefix, spacing consistent with the existing form field rhythm, and wrapping that avoids horizontal scroll at 320px. Then add jsdom as a devDependency (keep express the only runtime dependency) and write test/ui.test.js using node:test. Load public/index.html into a JSDOM instance with scripts run (or evaluate calc.js then app.js in the window), drive the UI by setting input values and dispatching submit, and assert on textContent, hidden state, aria-invalid and aria-describedby. Cover: initial state (results hidden, no errors), 50x2 shows 100.00/10.00/90.00, 10x5 shows 50.00/0.00/50.00, -5 shows the negative error with aria-invalid, 'abc' and 'x' show two errors together, a displayed result is removed after an invalid recalculation, and form submit is default-prevented. The file must be picked up by the existing npm test script and fail with a non-zero exit on failure.",
+      "acceptance_criteria": [
+        "Price '-5' with quantity '2' shows 'Price cannot be negative.' in the price error element and sets aria-invalid=\"true\" on #price",
+        "Price 'abc' and quantity 'x' show both field errors at the same time, each in its own error element",
+        "An invalid input has aria-describedby referencing the id of its error element",
+        "Error text includes a visible non-color prefix or icon character in addition to the message",
+        "After a successful calculation, all error elements are empty and no input has aria-invalid=\"true\"",
+        "After a successful calculation followed by an invalid one, the results panel is hidden and its Subtotal/Discount/Total text is cleared; no total is displayed anywhere when either field is invalid",
+        "In the running app, typing -5 in Price and 2 in Quantity then pressing Calculate shows the negative-price message under the Price field and no results panel",
+        "test/ui.test.js exists and jsdom is listed only in devDependencies in package.json",
+        "A jsdom test asserts initial state: results panel hidden and both error elements empty",
+        "A jsdom test asserts 50 x 2 produces Subtotal 100.00, Discount 10.00, Total 90.00 and '10% discount applied', and 10 x 5 produces 50.00, 0.00, 50.00 and 'No discount applied'",
+        "A jsdom test asserts price '-5' shows the negative-price message and aria-invalid=\"true\" on #price, and price 'abc' with quantity 'x' shows two error messages simultaneously",
+        "A jsdom test asserts a prior result is cleared after a subsequent invalid calculation",
+        "A jsdom test asserts the dispatched submit event has defaultPrevented true (no reload)",
+        "npm test runs test/ui.test.js and passes"
+      ]
+    }
+  ],
+  "metadata": {
+    "epic_key": "CQA-4",
+    "prd_title": "PRD - TestClaudeQA",
+    "generated": "2026-11-17T04:56:41.740941Z",
+    "total": 2,
+    "p0_count": 2,
+    "p1_count": 0,
+    "p2_count": 0
+  }
+}
