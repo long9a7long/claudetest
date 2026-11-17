@@ -75,3 +75,11 @@ cases:
     export: "calculate"
     args: [10005, 1]
     expect: { contains: {"discountCents": 1001, "totalCents": 9004} }  # AI-proposed, human-approved — covers a previously-untested acceptance criterion
+  - name: "covers: calculate(0, 5) and calculate(500, 0) both return subtotalCents 0, discountCents 0, totalCents 0"
+    kind: "testcase"
+    skill_id: "SKILL_002"
+    epic_key: "CQA-3"
+    module: "public/calc.js"
+    export: "calculate"
+    args: [0, 5]
+    expect: { equals: {"subtotalCents": 0, "discountCents": 0, "totalCents": 0} }  # AI-proposed, human-approved — covers a previously-untested acceptance criterion
