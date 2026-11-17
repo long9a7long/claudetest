@@ -1,0 +1,64 @@
+{
+  "skills": [
+    {
+      "name": "Calc module: constants, strict parsing and validation messages",
+      "tool": "Node.js / UMD module pattern / regular expressions (public/calc.js)",
+      "priority": "P0",
+      "skill_id": "SKILL_001",
+      "testcases": [],
+      "capability": "Replace the placeholder calc.js with a pure, dependency-free UMD module that exports frozen business-rule constants, strict parsers (price string to integer cents, quantity string to integer) and a single-pass validateInputs returning the exact per-field PRD error messages, including both field errors together.",
+      "dependencies": [],
+      "prompt_template": "You are implementing the shared core domain module public/calc.js. Wrap it in a UMD-style factory that attaches to a global (e.g. window.Calc) in the browser and sets module.exports in Node, with zero dependencies and no DOM access. Keep the existing placeholder export shape compatible with the app.js bootstrap and test/smoke.test.js, and do not touch server, styling or package/test-script files. Export a frozen constants set: DISCOUNT_RATE (0.10), DISCOUNT_THRESHOLD_CENTS (10000), MAX_PRICE (1000000), MAX_QUANTITY (10000). Add parsePriceToCents(str) and parseQuantity(str): trim first, require price to match ^\\d+(\\.\\d{1,2})?$ and convert to integer cents by string splitting and integer math (pad a single decimal digit; never parseFloat, Number() coercion or multiplication by 100); quantity must be a digit-only whole-number string. Return {ok, value, reason} with distinct reasons (empty, non-numeric, negative, too-many-decimals). Add validateInputs(priceStr, quantityStr) returning {valid, errors: {price?, quantity?}, priceCents, quantity}, evaluating both fields independently in one pass. Exact messages: 'Enter a price.' / 'Enter a quantity.' for empty or whitespace-only; 'Price must be a number.' / 'Quantity must be a whole number.' for non-numeric (abc, 1e3, 12,5, Infinity, NaN) and for a quantity with a decimal part; 'Price cannot be negative.' / 'Quantity cannot be negative.'; 'Price can have at most 2 decimal places.'; 'Price is too large.' (above MAX_PRICE) / 'Quantity is too large.' (above MAX_QUANTITY). Exactly MAX_PRICE and MAX_QUANTITY are allowed; zero is valid.",
+      "acceptance_criteria": [
+        "require('../public/calc.js') in Node returns an object without throwing, and loading the file in a simulated browser global (no module/exports defined) attaches the same API to the global object",
+        "public/calc.js contains no require() or import statements and no references to document or window outside the UMD wrapper",
+        "Exported constants DISCOUNT_RATE equals 0.1, DISCOUNT_THRESHOLD_CENTS equals 10000, MAX_PRICE equals 1000000 and MAX_QUANTITY equals 10000, and the constants object is frozen (Object.isFrozen returns true)",
+        "parsePriceToCents('19.99') yields 1999, ' 5 ' yields 500, '0.5' yields 50, '0' yields 0 and '1000000.00' yields 100000000 exactly",
+        "parsePriceToCents rejects '1e3', '12,5', 'abc', 'Infinity' and 'NaN' as non-numeric, rejects '1.999' with a too-many-decimals reason distinct from non-numeric, and rejects '-5' with a negative reason",
+        "parseQuantity('5') yields 5, '0' yields 0 and ' 7 ' yields 7; '2.5', '1e3' and 'abc' are rejected and '-3' is rejected with a negative reason",
+        "validateInputs('', '') returns valid false with errors.price 'Enter a price.' and errors.quantity 'Enter a quantity.'; validateInputs('   ', '3') returns only the price error 'Enter a price.'",
+        "validateInputs returns 'Price must be a number.' for 'abc', '1e3', '12,5', 'Infinity' and 'NaN' as price, and 'Quantity must be a whole number.' for quantity 'abc' and '2.5'",
+        "validateInputs('-1', '2') returns 'Price cannot be negative.' and validateInputs('5', '-1') returns 'Quantity cannot be negative.'; validateInputs('1.234', '2') returns 'Price can have at most 2 decimal places.'",
+        "validateInputs('1000000.01', '1') returns 'Price is too large.' and validateInputs('5', '10001') returns 'Quantity is too large.'; validateInputs('1000000', '10000') and validateInputs('0', '0') return valid true (the latter with priceCents 0 and quantity 0)",
+        "validateInputs('abc', '-2') returns both errors.price 'Price must be a number.' and errors.quantity 'Quantity cannot be negative.' in one result",
+        "validateInputs('19.99', '5') returns valid true with priceCents 1999, quantity 5 and an empty errors object",
+        "npm run lint passes and the existing test/smoke.test.js still passes with the new calc.js in place"
+      ]
+    },
+    {
+      "name": "Integer-cents calculation, 2-decimal formatting and unit tests",
+      "tool": "Node.js / node:test / node:assert (public/calc.js, test/calc.test.js)",
+      "priority": "P0",
+      "skill_id": "SKILL_002",
+      "testcases": [],
+      "capability": "Compute subtotal, discount and total in integer cents with a half-up rounded 10% discount applied when the pre-discount subtotal is at least 10000 cents, provide a float-free 2-decimal cents formatter, and cover all calculation and validation rules with a node:test suite that runs under the existing npm test script.",
+      "dependencies": [
+        "SKILL_001"
+      ],
+      "prompt_template": "Add calculate(priceCents, quantity) to public/calc.js returning {subtotalCents, discountCents, totalCents}. subtotalCents = priceCents * quantity; when subtotalCents >= DISCOUNT_THRESHOLD_CENTS, discountCents = round-half-up of 10% using integer math only (e.g. Math.floor((subtotalCents * 10 + 50) / 100)), else 0; totalCents = subtotalCents - discountCents. The threshold is always evaluated on the pre-discount subtotal. Zero price and zero quantity are valid and give all zeros. Do not re-parse or re-validate input here. Also add formatCents(cents) returning a 2-decimal string using integer division/modulo and string padding only (no toFixed, parseFloat or float division); do not implement thousands grouping, savings or threshold-hint helpers, which belong to other epics. Export both. Then create test/calc.test.js with node:test and node:assert/strict requiring ../public/calc.js, using table-driven tests with descriptive names that cover: the PRD calculation table end to end (validateInputs -> calculate -> formatCents), the 99.99 / 100.00 / 100.01 boundaries, 19.99 x 5 = 99.95, zero price and zero quantity, every rejected input with its exact message, every accepted input (limits 1000000 and 10000, '0', '0.5', ' 5 '), and the double-error case. Do not modify the npm test script or CI; confirm the existing script already picks up the new file alongside the smoke and server tests.",
+      "acceptance_criteria": [
+        "calculate(1999, 5) returns subtotalCents 9995, discountCents 0, totalCents 9995; calculate(9999, 1) returns discountCents 0 and totalCents 9999",
+        "calculate(10000, 1) returns subtotalCents 10000, discountCents 1000, totalCents 9000 (threshold inclusive) and calculate(10001, 1) returns discountCents 1000 and totalCents 9001",
+        "calculate(10005, 1) returns discountCents 1001 (half-up rounding of 1000.5) and totalCents 9004, and only one 10% discount is ever applied (calculate(10000, 1).discountCents is 1000, not 1900)",
+        "calculate(0, 5) and calculate(500, 0) both return subtotalCents 0, discountCents 0, totalCents 0",
+        "calculate(100000000, 10000) returns Number.isInteger true for all three fields with no fractional cents",
+        "formatCents(0) returns '0.00', formatCents(5) returns '0.05', formatCents(1050) returns '10.50', formatCents(9995) returns '99.95' and formatCents(100000000) returns '1000000.00'",
+        "The formatCents source contains no toFixed, parseFloat or float division on cents",
+        "test/calc.test.js exists and `npm test` runs it and exits with code 0 with all tests passing, alongside test/smoke.test.js and test/server.test.js",
+        "The suite asserts boundary strings: 99.99 -> discount '0.00' total '99.99'; 100.00 -> discount '10.00' total '90.00'; 100.01 -> discount '10.00' total '90.01'; and 19.99 x 5 -> subtotal '99.95' with no discount",
+        "The suite asserts the exact error message for each of the empty, whitespace-only, abc, 1e3, 12,5, Infinity, NaN, negative, 2.5 quantity, 3-decimal price, over-limit price and over-limit quantity inputs, plus a double-error case from a single validateInputs call",
+        "The suite asserts accepted inputs '0', '0.5', ' 5 ', price '1000000' and quantity '10000' return valid true",
+        "Deliberately changing the threshold comparison in calc.js from >= to > causes at least one test in test/calc.test.js to fail"
+      ]
+    }
+  ],
+  "metadata": {
+    "epic_key": "CQA-3",
+    "prd_title": "PRD - TestClaudeQA",
+    "generated": "2026-11-17T04:56:41.740941Z",
+    "total": 2,
+    "p0_count": 2,
+    "p1_count": 0,
+    "p2_count": 0
+  }
+}
