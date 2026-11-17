@@ -67,3 +67,11 @@ cases:
     export: "calculate"
     args: [10000, 1]
     expect: { contains: {"discountCents": 1000, "totalCents": 9000} }  # AI-proposed, human-approved — covers a previously-untested acceptance criterion
+  - name: "covers: calculate(10005, 1) returns discountCents 1001 (half-up rounding of 1000.5) and totalCents 9004, and only one 10"
+    kind: "testcase"
+    skill_id: "SKILL_002"
+    epic_key: "CQA-3"
+    module: "public/calc.js"
+    export: "calculate"
+    args: [10005, 1]
+    expect: { contains: {"discountCents": 1001, "totalCents": 9004} }  # AI-proposed, human-approved — covers a previously-untested acceptance criterion
