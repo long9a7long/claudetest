@@ -51,3 +51,51 @@ cases:
     export: "validateInputs"
     args: ["abc", "5"]
     expect: { contains: {"valid": false, "errors": {"price": "Price must be a number."}} }  # AI-proposed, human-approved — covers a previously-untested acceptance criterion
+  - name: "covers: calculate(1999, 5) returns subtotalCents 9995, discountCents 0, totalCents 9995; calculate(9999, 1) returns disc"
+    kind: "testcase"
+    skill_id: "SKILL_002"
+    epic_key: "CQA-3"
+    module: "public/calc.js"
+    export: "calculate"
+    args: [9999, 1]
+    expect: { contains: {"discountCents": 0, "totalCents": 9999} }  # AI-proposed, human-approved — covers a previously-untested acceptance criterion
+  - name: "covers: calculate(10000, 1) returns subtotalCents 10000, discountCents 1000, totalCents 9000 (threshold inclusive) and c"
+    kind: "testcase"
+    skill_id: "SKILL_002"
+    epic_key: "CQA-3"
+    module: "public/calc.js"
+    export: "calculate"
+    args: [10000, 1]
+    expect: { contains: {"discountCents": 1000, "totalCents": 9000} }  # AI-proposed, human-approved — covers a previously-untested acceptance criterion
+  - name: "covers: calculate(10005, 1) returns discountCents 1001 (half-up rounding of 1000.5) and totalCents 9004, and only one 10"
+    kind: "testcase"
+    skill_id: "SKILL_002"
+    epic_key: "CQA-3"
+    module: "public/calc.js"
+    export: "calculate"
+    args: [10005, 1]
+    expect: { contains: {"discountCents": 1001, "totalCents": 9004} }  # AI-proposed, human-approved — covers a previously-untested acceptance criterion
+  - name: "covers: calculate(0, 5) and calculate(500, 0) both return subtotalCents 0, discountCents 0, totalCents 0"
+    kind: "testcase"
+    skill_id: "SKILL_002"
+    epic_key: "CQA-3"
+    module: "public/calc.js"
+    export: "calculate"
+    args: [0, 5]
+    expect: { equals: {"subtotalCents": 0, "discountCents": 0, "totalCents": 0} }  # AI-proposed, human-approved — covers a previously-untested acceptance criterion
+  - name: "covers: calculate(100000000, 10000) returns Number.isInteger true for all three fields with no fractional cents"
+    kind: "testcase"
+    skill_id: "SKILL_002"
+    epic_key: "CQA-3"
+    module: "public/calc.js"
+    export: "calculate"
+    args: [100000000, 10000]
+    expect: { contains: {"subtotalCents": 1000000000000, "discountCents": 100000000000, "totalCents": 900000000000} }  # AI-proposed, human-approved — covers a previously-untested acceptance criterion
+  - name: "covers: formatCents(0) returns '0.00', formatCents(5) returns '0.05', formatCents(1050) returns '10.50', formatCents(999"
+    kind: "testcase"
+    skill_id: "SKILL_002"
+    epic_key: "CQA-3"
+    module: "public/calc.js"
+    export: "formatCents"
+    args: [5]
+    expect: { equals: "0.05" }  # AI-proposed, human-approved — covers a previously-untested acceptance criterion

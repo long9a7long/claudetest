@@ -165,3 +165,113 @@ test('validateInputs: valid happy path', () => {
   assert.equal(result.quantity, 5);
   assert.deepEqual(result.errors, {});
 });
+
+test('calculate: PRD table cases', () => {
+  const cases = [
+    [1999, 5, { subtotalCents: 9995, discountCents: 0, totalCents: 9995 }],
+    [9999, 1, { subtotalCents: 9999, discountCents: 0, totalCents: 9999 }],
+    [10000, 1, { subtotalCents: 10000, discountCents: 1000, totalCents: 9000 }],
+    [10001, 1, { subtotalCents: 10001, discountCents: 1000, totalCents: 9001 }],
+    [10005, 1, { subtotalCents: 10005, discountCents: 1001, totalCents: 9004 }],
+    [0, 5, { subtotalCents: 0, discountCents: 0, totalCents: 0 }],
+    [500, 0, { subtotalCents: 0, discountCents: 0, totalCents: 0 }]
+  ];
+  for (const [priceCents, quantity, expected] of cases) {
+    assert.deepEqual(
+      Calc.calculate(priceCents, quantity),
+      expected,
+      `calculate(${priceCents}, ${quantity})`
+    );
+  }
+});
+
+test('calculate: threshold is inclusive (>=), not exclusive (>)', () => {
+  const result = Calc.calculate(10000, 1);
+  assert.equal(result.discountCents, 1000, 'boundary subtotal of exactly 10000 must receive the discount');
+  assert.notEqual(result.discountCents, 0, 'a > comparison would wrongly skip the discount at exactly the threshold');
+});
+
+test('calculate: exactly one discount is ever applied, never stacked', () => {
+  const result = Calc.calculate(10000, 1);
+  assert.equal(result.discountCents, 1000);
+  assert.notEqual(result.discountCents, 1900);
+});
+
+test('calculate: maximum inputs stay integral with no fractional cents', () => {
+  const result = Calc.calculate(100000000, 10000);
+  assert.equal(result.subtotalCents, 1000000000000);
+  assert.equal(result.discountCents, 100000000000);
+  assert.equal(result.totalCents, 900000000000);
+  assert.ok(Number.isInteger(result.subtotalCents));
+  assert.ok(Number.isInteger(result.discountCents));
+  assert.ok(Number.isInteger(result.totalCents));
+});
+
+test('formatCents: fixed values format to exactly 2 decimals', () => {
+  assert.equal(Calc.formatCents(0), '0.00');
+  assert.equal(Calc.formatCents(5), '0.05');
+  assert.equal(Calc.formatCents(1050), '10.50');
+  assert.equal(Calc.formatCents(9995), '99.95');
+  assert.equal(Calc.formatCents(100000000), '1000000.00');
+});
+
+test('formatCents: source uses no toFixed, parseFloat, or float division', () => {
+  const formatCentsSource = calcSource.slice(
+    calcSource.indexOf('function formatCents'),
+    calcSource.indexOf('function formatCents') + calcSource.slice(calcSource.indexOf('function formatCents')).indexOf('\n  }') + 4
+  );
+  assert.doesNotMatch(formatCentsSource, /toFixed/);
+  assert.doesNotMatch(formatCentsSource, /parseFloat/);
+  assert.doesNotMatch(formatCentsSource, /\/\s*100/);
+});
+
+test('full pipeline boundary strings: 99.99, 100.00, 100.01', () => {
+  const cases = [
+    ['99.99', '1', '0.00', '99.99'],
+    ['100.00', '1', '10.00', '90.00'],
+    ['100.01', '1', '10.00', '90.01']
+  ];
+  for (const [priceStr, quantityStr, expectedDiscount, expectedTotal] of cases) {
+    const validation = Calc.validateInputs(priceStr, quantityStr);
+    assert.equal(validation.valid, true);
+    const result = Calc.calculate(validation.priceCents, validation.quantity);
+    assert.equal(Calc.formatCents(result.discountCents), expectedDiscount, `discount for ${priceStr}`);
+    assert.equal(Calc.formatCents(result.totalCents), expectedTotal, `total for ${priceStr}`);
+  }
+});
+
+test('full pipeline: 19.99 x 5 subtotal is 99.95 with no discount', () => {
+  const validation = Calc.validateInputs('19.99', '5');
+  assert.equal(validation.valid, true);
+  const result = Calc.calculate(validation.priceCents, validation.quantity);
+  assert.equal(Calc.formatCents(result.subtotalCents), '99.95');
+  assert.equal(Calc.formatCents(result.discountCents), '0.00');
+});
+
+test('validateInputs: full exact-message error matrix', () => {
+  assert.equal(Calc.validateInputs('', '5').errors.price, 'Enter a price.');
+  assert.equal(Calc.validateInputs('   ', '5').errors.price, 'Enter a price.');
+  assert.equal(Calc.validateInputs('abc', '5').errors.price, 'Price must be a number.');
+  assert.equal(Calc.validateInputs('1e3', '5').errors.price, 'Price must be a number.');
+  assert.equal(Calc.validateInputs('12,5', '5').errors.price, 'Price must be a number.');
+  assert.equal(Calc.validateInputs('Infinity', '5').errors.price, 'Price must be a number.');
+  assert.equal(Calc.validateInputs('NaN', '5').errors.price, 'Price must be a number.');
+  assert.equal(Calc.validateInputs('-1', '5').errors.price, 'Price cannot be negative.');
+  assert.equal(Calc.validateInputs('5', '2.5').errors.quantity, 'Quantity must be a whole number.');
+  assert.equal(Calc.validateInputs('1.234', '5').errors.price, 'Price can have at most 2 decimal places.');
+  assert.equal(Calc.validateInputs('1000000.01', '5').errors.price, 'Price is too large.');
+  assert.equal(Calc.validateInputs('5', '10001').errors.quantity, 'Quantity is too large.');
+
+  const both = Calc.validateInputs('abc', '-2');
+  assert.equal(both.valid, false);
+  assert.equal(both.errors.price, 'Price must be a number.');
+  assert.equal(both.errors.quantity, 'Quantity cannot be negative.');
+});
+
+test('validateInputs: accepted inputs including limits', () => {
+  assert.equal(Calc.validateInputs('0', '5').valid, true);
+  assert.equal(Calc.validateInputs('0.5', '5').valid, true);
+  assert.equal(Calc.validateInputs(' 5 ', '5').valid, true);
+  assert.equal(Calc.validateInputs('1000000', '5').valid, true);
+  assert.equal(Calc.validateInputs('5', '10000').valid, true);
+});
