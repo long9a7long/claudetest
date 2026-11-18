@@ -1,4 +1,5 @@
 :root {
+  color-scheme: light dark;
   --color-bg: #f6f7f9;
   --color-surface: #ffffff;
   --color-text: #1a1a1a;
@@ -42,7 +43,7 @@
     --color-accent-contrast: #0c1424;
     --color-error: #ff6b61;
     --color-success: #3ddc97;
-    --color-border: #333a46;
+    --color-border: #707b89;
     --color-focus-ring: #6690ff;
     --color-input-bg: #15181d;
   }
