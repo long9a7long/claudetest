@@ -120,9 +120,26 @@
     return { subtotalCents, discountCents, totalCents };
   }
 
-  function formatCents(cents) {
-    const s = String(cents).padStart(3, '0');
-    return s.slice(0, -2) + '.' + s.slice(-2);
+  function groupIntegerPart(intPart) {
+    let result = '';
+    for (let i = 0; i < intPart.length; i += 1) {
+      const posFromEnd = intPart.length - i;
+      if (i > 0 && posFromEnd % 3 === 0) {
+        result += ',';
+      }
+      result += intPart.charAt(i);
+    }
+    return result;
+  }
+
+  function formatCents(cents, options) {
+    const grouped = Boolean(options && options.grouped);
+    const negative = cents < 0;
+    const s = String(Math.abs(cents)).padStart(3, '0');
+    const intPart = s.slice(0, -2);
+    const fracPart = s.slice(-2);
+    const formattedInt = grouped ? groupIntegerPart(intPart) : intPart;
+    return (negative ? '-' : '') + formattedInt + '.' + fracPart;
   }
 
   function savingsCents(subtotalCents) {

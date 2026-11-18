@@ -57,19 +57,20 @@ function init() {
   }
 
   function showResults(subtotalCents, discountCents, totalCents) {
-    subtotalEl.textContent = Calc.formatCents(subtotalCents);
-    discountEl.textContent = Calc.formatCents(discountCents);
-    totalEl.textContent = Calc.formatCents(totalCents);
+    const groupOpts = { grouped: true };
+    subtotalEl.textContent = Calc.formatCents(subtotalCents, groupOpts);
+    discountEl.textContent = Calc.formatCents(discountCents, groupOpts);
+    totalEl.textContent = Calc.formatCents(totalCents, groupOpts);
     noteEl.textContent = discountCents > 0 ? '10% discount applied' : 'No discount applied';
 
     if (discountCents > 0) {
-      savingsEl.textContent = 'You saved ' + Calc.formatCents(discountCents);
+      savingsEl.textContent = 'You saved ' + Calc.formatCents(discountCents, groupOpts);
       savingsEl.hidden = false;
       hintEl.textContent = '';
       hintEl.hidden = true;
     } else {
       const remainingCents = Calc.remainingToThresholdCents(subtotalCents);
-      hintEl.textContent = 'Add ' + Calc.formatCents(remainingCents) + ' more to get 10% off';
+      hintEl.textContent = 'Add ' + Calc.formatCents(remainingCents, groupOpts) + ' more to get 10% off';
       hintEl.hidden = false;
       savingsEl.textContent = '';
       savingsEl.hidden = true;

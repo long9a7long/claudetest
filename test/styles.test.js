@@ -446,9 +446,8 @@ test('the Total amount wraps instead of overflowing at 320px, and controls stay 
   const dom = makeDom();
   fillAndSubmit(dom, '1000000', '1'); // the maximum allowed price: a long 7-digit total string
   const { document } = dom.window;
-  // Note: calc.js's formatCents does not currently apply thousands-grouping (a pre-existing gap
-  // outside this ticket's scope, which only covers styles.css/index.html/app.js). The rendered
-  // text is still long enough to exercise the no-overflow guarantee at 320px.
-  assert.equal(document.getElementById('result-subtotal').textContent, '1000000.00');
-  assert.equal(document.getElementById('result-total').textContent, '900000.00');
+  // Results are now rendered with thousands-grouping (CQA-34); the rendered text is still
+  // long enough to exercise the no-overflow guarantee at 320px.
+  assert.equal(document.getElementById('result-subtotal').textContent, '1,000,000.00');
+  assert.equal(document.getElementById('result-total').textContent, '900,000.00');
 });
