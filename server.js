@@ -19,7 +19,9 @@ app.use(express.static(path.join(__dirname, 'public'), {
 
 app.get('/api/health', (req, res) => {
   res.set('Cache-Control', 'no-store');
-  res.status(200).json({ status: 'ok' });
+  // res.end bypasses express's res.send()/etag generation so a conditional
+  // request never short-circuits a health check into a stale 304.
+  res.status(200).type('application/json').end(JSON.stringify({ status: 'ok' }));
 });
 
 app.use((req, res) => {
