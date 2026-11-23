@@ -17,6 +17,11 @@ app.use(express.static(path.join(__dirname, 'public'), {
   index: 'index.html',
 }));
 
+app.get('/api/health', (req, res) => {
+  res.set('Cache-Control', 'no-store');
+  res.status(200).json({ status: 'ok' });
+});
+
 app.use((req, res) => {
   res.status(404).type('text/plain').send('Not Found');
 });
