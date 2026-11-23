@@ -1,45 +1,48 @@
 name: ADLC Step 8 — Deploy
 
+# ── The contract Step 8 depends on ────────────────────────────────────────────
+# Phase 8 approve calls:
+#   POST /repos/<owner>/<repo>/actions/workflows/deploy.yml/dispatches
+#   body: { ref: "main", inputs: { epic_key, version } }
+# For that dispatch to return 204 (not 404):
+#   1. This file lives at .github/workflows/deploy.yml on main.
+#   2. It declares `on: workflow_dispatch:`.
+#   3. It declares inputs `epic_key` and `version` — names must match exactly.
+#
+# The deploy itself is NOT done here. This project is connected to Vercel
+# through the ADLC Vercel Integration, and its Vercel project is linked to this
+# repository: Vercel builds and ships every push to main on its own, so the
+# merge Phase 8 just made is already deploying. The ADLC Hub watches that
+# production deployment and fills in the Step 9 URL when it is ready.
+# What is left for this workflow is the release tag.
 on:
   workflow_dispatch:
     inputs:
       epic_key:
         required: true
         type: string
-        description: "Jira Epic/subtask key (e.g. SHOP-27)"
+        description: "Jira Epic/subtask key (e.g. RPG-53)"
       version:
         required: true
         type: string
         description: "Release version (e.g. v1.1.0)"
 
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
-  deploy:
+  release:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 5
+    # "Create Git tag" pushes a tag back; default GITHUB_TOKEN is read-only.
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'npm'
-
-      - run: npm ci
-
-      - name: Verify build
-        id: build
-        run: npm test
-
-      - name: Deploy
-        id: deploy
-        run: |
-          echo "Deploying ${{ github.repository }} ${{ inputs.version }} for ${{ inputs.epic_key }}"
-          # TODO: real deploy steps go here. Left as a no-op so the pipeline
-          # completes end-to-end; the tag below is the part Step 8 observes.
-        continue-on-error: true
-
       - name: Create Git tag
-        if: steps.build.outcome == 'success'
+        continue-on-error: true
         run: |
           git config user.name "github-actions"
           git config user.email "actions@github.com"
